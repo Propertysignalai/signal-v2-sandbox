@@ -1,0 +1,348 @@
+{
+  "name": "Signal v2 - Single Zip Phase 1 (v3-merge)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "single-zip-phase1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "webhook-start",
+      "name": "Webhook Start"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract webhook input and split into geo_context (Layer 1) and strategy_context (Layer 2 only)\nconst input = $json.body || $json;\n\n// geo_context: ONLY geographic identifiers \u2014 forwarded to all 5 agents\nconst geo_context = {\n  zip_code: input.zip_code || '63365',\n  city: input.city || 'Unknown',\n  county: input.county || 'Unknown',\n  state: input.state || 'Unknown'\n};\n\n// strategy_context: investment parameters \u2014 held for Layer 2 synthesis ONLY\nconst strategy_context = {\n  exit_strategy: input.exit_strategy || 'Fix & Flip',\n  buy_box_criteria: input.buy_box_criteria || {}\n};\n\nreturn {\n  geo_context: geo_context,\n  strategy_context: strategy_context\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "id": "extract-input",
+      "name": "Extract Input"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"Authorization\": \"Bearer PERPLEXITY_API_KEY\", \"Content-Type\": \"application/json\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'sonar-pro', messages: [{ role: 'user', content: `You are a Property Stock Analyst investigating the built environment in ${$('Extract Input').item.json.geo_context.zip_code} (${$('Extract Input').item.json.geo_context.city}, ${$('Extract Input').item.json.geo_context.county}, ${$('Extract Input').item.json.geo_context.state}).\n\nYour mission is to build a comprehensive picture of what is physically built in this area. You do NOT know what investment strategy this data will be used for. Report raw facts only.\n\n## INVESTIGATIVE DIRECTIVES\n\n**Housing Stock Age & History:**\nResearch when housing was built in this area. Find what you can about the median year built, the dominant construction era, and the age distribution. For small or rural zip codes, county-level data or nearby comparable markets are acceptable \u2014 just note the data level.\n\n**Property Type Composition:**\nInvestigate the mix of property types: single-family, multi-family, condos, townhomes, manufactured homes, vacant land. Identify the dominant type and approximate percentages where available.\n\n**Physical Characteristics:**\nResearch typical home sizes, lot sizes, and configurations. What does a \"typical\" property look like in this zip? Include whatever data you can find \u2014 median square footage, lot acreage, bed/bath counts.\n\n**Housing Density:**\nEstimate housing density (units per acre or similar metric). SANITY CHECK: Before reporting any density figure, verify it against known benchmarks. Rural areas typically have well under 1 unit per acre. Suburban areas run 2-8 units per acre. Urban areas are 10-50 units per acre. Only the densest cities (Manhattan) exceed 100 units per acre. If your calculated number does not match the area type, recalculate or note the uncertainty.\n\n**Condition & Code Indicators:**\nLook for signals about property condition: code violation volumes and trends, condemned properties, demolition permits, building permit activity (both renovations and new construction). If specific zip-level data is not available, use county data and note it.\n\n**Construction & Style:**\nWhat are the typical construction materials and architectural styles? Any historic districts or preservation restrictions?\n\n**Environmental Constraints:**\nCheck flood zone coverage (FEMA), brownfield proximity, and other physical constraints.\n\n## DATA SCARCITY INSTRUCTIONS\n- If zip-level data is not available, use county-level data and clearly note \"county-level aggregate\"\n- For small/rural areas, use nearby comparable markets as context\n- Use proxy indicators when direct data does not exist\n- It is better to report \"data not available at zip level; county shows X\" than to fabricate numbers\n- Null values are acceptable\n\nReturn structured JSON with these fields: zip_code, data_coverage, housing_stock_age, property_type_mix, physical_characteristics, housing_density (with sanity_check note), condition_indicators, construction_materials, architectural_styles, historic_districts, flood_zone_coverage_pct, environmental_notes. Fields may be null when data is unavailable.` }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -200
+      ],
+      "id": "agent-1-property-stock",
+      "name": "Agent 1: Property Stock"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"Authorization\": \"Bearer PERPLEXITY_API_KEY\", \"Content-Type\": \"application/json\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'sonar-pro', messages: [{ role: 'user', content: `You are a Financial & Equity Analyst investigating property ownership financial positions in ${$('Extract Input').item.json.geo_context.zip_code} (${$('Extract Input').item.json.geo_context.city}, ${$('Extract Input').item.json.geo_context.county}, ${$('Extract Input').item.json.geo_context.state}).\n\nYour mission is to build a comprehensive picture of what owners owe, what properties are worth, and how those numbers are trending. You do NOT know what investment strategy this data will be used for. Report raw financial facts only.\n\n## INVESTIGATIVE DIRECTIVES\n\n**Property Values & Trends:**\nResearch current median home values and recent price trends. Find what you can about 12-month and 24-month price changes, price per square foot, and overall trend direction.\n\n**Equity Positions:**\nInvestigate how much equity owners hold. Look for data on high-equity concentrations (50%+), negative equity rates, free-and-clear ownership, and average loan-to-value ratios. For small markets, county-level data with a note is acceptable.\n\n**Mortgage Characteristics:**\nResearch the mortgage landscape: ARM vs fixed-rate concentrations, maturity timelines, average balances. This data is often only available at county or MSA level for small zips \u2014 that is fine, just note it.\n\n**Tax Assessment & Delinquency:**\nLook into assessment-to-market-value ratios and tax delinquency rates.\n\n**Recent Sales Activity:**\nInvestigate recent transaction volume and pricing. Find closed sales counts, median sale prices, days on market trends, sale-to-list ratios, and cash purchase percentages.\n\n**Distressed Sale Pricing:**\nResearch REO/bank-owned sale volumes and how distressed sale prices compare to standard sales.\n\n## DATA SCARCITY INSTRUCTIONS\n- If zip-level data is not available, use county-level data and clearly note it\n- For small/rural markets, transaction volumes will be low \u2014 report actual numbers rather than extrapolating\n- Use ranges or narrative when precise numbers are not available\n- Null values are acceptable \u2014 do not fabricate data\n\nReturn structured JSON with these fields: zip_code, data_coverage, property_values, equity_distribution, mortgage_characteristics, tax_assessment, recent_sales, distressed_sales. Fields may be null when data is unavailable.` }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -100
+      ],
+      "id": "agent-2-financial-equity",
+      "name": "Agent 2: Financial & Equity"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"Authorization\": \"Bearer PERPLEXITY_API_KEY\", \"Content-Type\": \"application/json\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'sonar-pro', messages: [{ role: 'user', content: `You are a Distress & Legal Analyst investigating legal and financial distress indicators in ${$('Extract Input').item.json.geo_context.zip_code} (${$('Extract Input').item.json.geo_context.city}, ${$('Extract Input').item.json.geo_context.county}, ${$('Extract Input').item.json.geo_context.state}).\n\nYour mission is to build a comprehensive picture of distress activity in this area \u2014 who is in trouble, what kind of trouble, and how volumes are trending. You do NOT know what investment strategy this data will be used for. Report raw distress facts and categorize by type.\n\n## INVESTIGATIVE DIRECTIVES\n\n**Foreclosure Activity:**\nResearch foreclosure filing volumes, trends, and stages. Look for NOD/lis pendens volumes, auction activity, and trend data (increasing/stable/declining). For small markets, even single-digit counts are valuable.\n\n**Tax-Related Distress:**\nInvestigate tax lien sales, tax delinquency rates, and tax-related foreclosures.\n\n**Bankruptcy:**\nLook into bankruptcy filing volumes (Chapter 7 and 13 separately if possible). How does the current rate compare to prior years?\n\n**Probate & Death-Related Transfers:**\nResearch probate filings, death-related property transfers, and estate sales. County-level data is typical and acceptable.\n\n**Divorce & Family:**\nInvestigate divorce filing rates and property division cases.\n\n**Eviction & Vacancy:**\nLook for eviction filing volumes, vacant property registrations, and utility shutoff indicators.\n\n**Code Enforcement:**\nResearch code violations, liens, condemnation orders, and municipal enforcement activity.\n\n**Distress Composition:**\nAfter gathering data, estimate the approximate composition of distress: what percentage is foreclosure vs probate vs tax vs bankruptcy vs other?\n\n## DATA SCARCITY INSTRUCTIONS\n- Court filings are typically county-level \u2014 note this and provide context\n- For small/rural zips, report actual numbers rather than rates when sample is tiny\n- If a data category is not available, report null rather than guessing\n- Use narrative descriptions when quantitative data is unavailable\n- Look for proxy indicators: newspaper legal notices, auction listings, sheriff sale postings\n\nReturn structured JSON with these fields: zip_code, data_coverage, foreclosure_activity, tax_distress, bankruptcy, probate_death, divorce, eviction_vacancy, code_enforcement, distress_composition. Fields may be null when data is unavailable.` }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "agent-3-distress-legal",
+      "name": "Agent 3: Distress & Legal"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"Authorization\": \"Bearer PERPLEXITY_API_KEY\", \"Content-Type\": \"application/json\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'sonar-pro', messages: [{ role: 'user', content: `You are an Ownership & Occupancy Analyst investigating property ownership patterns in ${$('Extract Input').item.json.geo_context.zip_code} (${$('Extract Input').item.json.geo_context.city}, ${$('Extract Input').item.json.geo_context.county}, ${$('Extract Input').item.json.geo_context.state}).\n\nYour mission is to build a comprehensive picture of who owns properties in this area, where they are located, and how they hold title. You do NOT know what investment strategy this data will be used for. Report raw ownership facts only.\n\n## INVESTIGATIVE DIRECTIVES\n\n**Owner-Occupied vs Absentee:**\nResearch the split between owner-occupied and absentee-owned properties. If available, break absentee into in-state vs out-of-state.\n\n**Corporate & Entity Ownership:**\nInvestigate LLC, corporate, and trust ownership concentrations.\n\n**Portfolio Ownership:**\nLook for multi-property owners: entities or individuals owning 3+, 5+, 10+ properties. Is ownership concentrated or distributed?\n\n**Investor Activity:**\nResearch recent investor purchase activity. What share of transactions were investor purchases? Cash buyer concentration is often a proxy.\n\n**Length of Ownership:**\nInvestigate how long current owners have held their properties. Look for median years held, concentrations of long-term owners (10+, 20+ years), and recent turnover rates.\n\n**Vacancy & Rental:**\nResearch vacancy rates (total, structural, seasonal) and the rental vs owner-occupied ratio.\n\n**Government & Institutional:**\nCheck for government-owned, bank-owned (REO), or institutionally-held properties.\n\n## DATA SCARCITY INSTRUCTIONS\n- Census ACS data is often the best source for occupancy \u2014 note the survey year\n- For small zips, ownership data may only be available at tract or county level\n- Null values are fine \u2014 do not fabricate ownership percentages\n- For portfolio analysis, note if data is unavailable rather than guessing\n\nReturn structured JSON with these fields: zip_code, data_coverage, occupancy, corporate_ownership, portfolio_owners, investor_activity, length_of_ownership, vacancy_rental, government_institutional. Fields may be null when data is unavailable.` }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        100
+      ],
+      "id": "agent-4-ownership-occupancy",
+      "name": "Agent 4: Ownership & Occupancy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"Authorization\": \"Bearer PERPLEXITY_API_KEY\", \"Content-Type\": \"application/json\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'sonar-pro', messages: [{ role: 'user', content: `You are a Market Dynamics & Momentum Analyst investigating market direction and catalysts in ${$('Extract Input').item.json.geo_context.zip_code} (${$('Extract Input').item.json.geo_context.city}, ${$('Extract Input').item.json.geo_context.county}, ${$('Extract Input').item.json.geo_context.state}).\n\nYour mission is to build a comprehensive picture of where this market is headed \u2014 what forces are actively changing it, what is being built, who is moving in or out, and what catalysts are on the horizon. You do NOT know what investment strategy this data will be used for. Report raw facts about market direction.\n\n## INVESTIGATIVE DIRECTIVES\n\n**Active Listings & Absorption:**\nResearch the current listing environment. How many active listings? Months of inventory? Days on market trends? Absorption rate? For small markets, inventory may be very thin \u2014 report actual numbers.\n\n**Transaction Momentum:**\nInvestigate whether new listings are outpacing sales or vice versa. Is the market accelerating, stable, or decelerating?\n\n**Construction & Development:**\nResearch new construction permit activity (residential and commercial), announced developments, subdivisions under construction, and major projects in the pipeline.\n\n**Zoning & Planning:**\nLook for recent or pending zoning changes, rezoning applications, master plan updates.\n\n**Employment & Employers:**\nResearch major employers and any recent expansions, contractions, relocations, or new facility announcements.\n\n**Infrastructure:**\nInvestigate highway, road, transit, school, and hospital projects \u2014 approved, under construction, or proposed.\n\n**Rental Market:**\nResearch median rents by property type, rental vacancy rates, and rent growth trends.\n\n**Population & Demographics:**\nLook for population growth signals: school enrollment trends, utility connection growth, migration patterns.\n\n**Short-Term Rentals & Institutional Activity:**\nCheck for Airbnb/VRBO presence, STR regulations, institutional buyer activity, and build-to-rent developments.\n\n## DATA SCARCITY INSTRUCTIONS\n- For small/rural zips, many metrics will have tiny sample sizes \u2014 report actuals\n- Regional data (employers, infrastructure) naturally covers broader areas \u2014 that is expected\n- Note when data is regional vs zip-specific\n- Null values are fine for categories with no available data\n\nReturn structured JSON with these fields: zip_code, data_coverage, active_listings, transaction_momentum, construction_development, zoning_planning, employer_activity, infrastructure_projects, rental_market, population_demographics, short_term_rentals, institutional_activity. Fields may be null when data is unavailable.` }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        200
+      ],
+      "id": "agent-5-market-dynamics",
+      "name": "Agent 5: Market Dynamics"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        550,
+        0
+      ],
+      "id": "merge-agents",
+      "name": "Merge Agents"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect all 5 agent responses - use .first() for parallel merge compatibility\nconst geo = $('Extract Input').first().json.geo_context;\nconst strategy = $('Extract Input').first().json.strategy_context;\nconst agent1 = $('Agent 1: Property Stock').first().json.choices?.[0]?.message?.content || '{}';\nconst agent2 = $('Agent 2: Financial & Equity').first().json.choices?.[0]?.message?.content || '{}';\nconst agent3 = $('Agent 3: Distress & Legal').first().json.choices?.[0]?.message?.content || '{}';\nconst agent4 = $('Agent 4: Ownership & Occupancy').first().json.choices?.[0]?.message?.content || '{}';\nconst agent5 = $('Agent 5: Market Dynamics').first().json.choices?.[0]?.message?.content || '{}';\n\n// Build Layer 2 Analyst Prompt \u2014 NOW pulls strategy_context for the first time\nconst layer2Prompt = `You are a real estate market analyst synthesizing intelligence for ${geo.zip_code} in ${geo.city}, ${geo.county}, ${geo.state} through the lens of a ${strategy.exit_strategy} investment strategy.\n\nYou have received 5 independent research reports from strategy-blind agents. Your job is to apply mosaic theory: connect patterns across these reports that no single agent could have identified alone, then assess whether this zip presents HIGH or LOW signal for the specified exit strategy.\n\n## INPUT DATA\n\n### CLIENT EXIT STRATEGY:\n${strategy.exit_strategy}\n\n### CLIENT BUY BOX CRITERIA:\n${JSON.stringify(strategy.buy_box_criteria, null, 2)}\n\n### RESEARCH REPORT 1: Property Stock Analyst\n${agent1}\n\n### RESEARCH REPORT 2: Financial & Equity Analyst\n${agent2}\n\n### RESEARCH REPORT 3: Distress & Legal Analyst\n${agent3}\n\n### RESEARCH REPORT 4: Ownership & Occupancy Analyst\n${agent4}\n\n### RESEARCH REPORT 5: Market Dynamics & Momentum Analyst\n${agent5}\n\n## YOUR TASK: MOSAIC SYNTHESIS\n\nConnect patterns ACROSS reports. Look for:\n- Death + Absentee + Equity patterns\n- Foreclosure + Portfolio + ARM patterns  \n- Renovation catalyst patterns\n- Teardown opportunity patterns\n\nApply the ${strategy.exit_strategy} lens to assess relevance.\n\nNote: Some agents may report data at county level or note data scarcity. Factor data confidence into your assessment. If most data is county-level for a small/rural zip, lower your confidence score accordingly.\n\nClassify as HIGH SIGNAL or LOW SIGNAL with confidence score (0.0-1.0).\n\n## OUTPUT SCHEMA (Return ONLY valid JSON):\n\n{\n  \"zip_code\": \"${geo.zip_code}\",\n  \"city\": \"${geo.city}\",\n  \"county\": \"${geo.county}\",\n  \"state\": \"${geo.state}\",\n  \"exit_strategy\": \"${strategy.exit_strategy}\",\n  \"signal_classification\": \"HIGH or LOW\",\n  \"confidence\": 0.0 to 1.0,\n  \"data_quality_notes\": \"Note any data scarcity or county-level aggregation issues\",\n  \"dominant_profiles\": [\"heirs\", \"absentee_out_of_state\", \"equity_rich\", \"aging_owners\"],\n  \"observed_combinations\": [\n    {\n      \"name\": \"Combination name\",\n      \"prevalence\": \"high/moderate/low\",\n      \"evidence\": \"Agent X reported Y\",\n      \"signal_strength\": \"strong/moderate/weak\",\n      \"relevance_to_strategy\": \"Why this matters for ${strategy.exit_strategy}\"\n    }\n  ],\n  \"median_value\": 285000,\n  \"lat\": 38.7123,\n  \"lng\": -90.8845,\n  \"insight\": \"2-3 sentence client-facing summary\",\n  \"reasoning\": \"Detailed synthesis showing how you connected patterns across reports\"\n}\n\nOutput ONLY the JSON. No markdown fences, no explanatory text.`;\n\n// Return for Claude call\nreturn {\n  model: 'claude-opus-4-5-20251101',\n  max_tokens: 8000,\n  temperature: 0.1,\n  messages: [{ role: 'user', content: layer2Prompt }]\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        0
+      ],
+      "id": "build-layer2-prompt",
+      "name": "Build Layer 2 Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\"x-api-key\": \"ANTHROPIC_API_KEY\", \"Content-Type\": \"application/json\", \"anthropic-version\": \"2023-06-01\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        0
+      ],
+      "id": "layer2-analyst",
+      "name": "Layer 2: Analyst Synthesis"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Layer 2 output\nconst claudeResponse = $json.content?.[0]?.text || '{}';\n\n// Clean JSON if wrapped in markdown\nlet cleanedResponse = claudeResponse;\nif (claudeResponse.includes('```json')) {\n  const match = claudeResponse.match(/```json\\s*([\\s\\S]*?)\\s*```/);\n  if (match) cleanedResponse = match[1];\n}\n\n// Parse and return\ntry {\n  const layer2Output = JSON.parse(cleanedResponse);\n  return layer2Output;\n} catch (e) {\n  return {\n    error: 'Failed to parse Layer 2 output',\n    raw: cleanedResponse.substring(0, 500)\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "parse-layer2-output",
+      "name": "Parse Layer 2 Output"
+    }
+  ],
+  "connections": {
+    "Webhook Start": {
+      "main": [
+        [
+          {
+            "node": "Extract Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Input": {
+      "main": [
+        [
+          {
+            "node": "Agent 1: Property Stock",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 2: Financial & Equity",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 3: Distress & Legal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 4: Ownership & Occupancy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 5: Market Dynamics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1: Property Stock": {
+      "main": [
+        [
+          {
+            "node": "Merge Agents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2: Financial & Equity": {
+      "main": [
+        [
+          {
+            "node": "Merge Agents",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Agent 3: Distress & Legal": {
+      "main": [
+        [
+          {
+            "node": "Merge Agents",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Agent 4: Ownership & Occupancy": {
+      "main": [
+        [
+          {
+            "node": "Merge Agents",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Agent 5: Market Dynamics": {
+      "main": [
+        [
+          {
+            "node": "Merge Agents",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Merge Agents": {
+      "main": [
+        [
+          {
+            "node": "Build Layer 2 Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Layer 2 Prompt": {
+      "main": [
+        [
+          {
+            "node": "Layer 2: Analyst Synthesis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layer 2: Analyst Synthesis": {
+      "main": [
+        [
+          {
+            "node": "Parse Layer 2 Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-17T16:40:00.000Z",
+  "versionId": "3"
+}

@@ -7,3 +7,5 @@ test-result.txt
 n8n-import-*.txt
 n8n-import-*.json
 *.log
+*-keys.json
+*-with-keys.json
