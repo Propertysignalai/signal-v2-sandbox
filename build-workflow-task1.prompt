@@ -1,0 +1,27 @@
+Build an n8n workflow JSON for Signal v2.0 Task 1: Single-Zip Phase 1 Sub-Workflow.
+
+REQUIREMENTS:
+1. Webhook trigger that accepts: { zip_code, city, county, state, exit_strategy, buy_box_criteria }
+2. Five parallel Perplexity HTTP request nodes (one per research agent)
+3. Code node to collect all 5 responses and build Layer 2 analyst prompt
+4. Claude HTTP request node for Layer 2 synthesis
+5. Output node returning structured Layer 2 JSON
+
+NODE STRUCTURE (reference v1 pattern):
+- Webhook: type "n8n-nodes-base.webhook", httpMethod POST
+- HTTP Request: type "n8n-nodes-base.httpRequest", typeVersion 4.2
+- Code: type "n8n-nodes-base.code", typeVersion 2
+
+AGENT TEMPLATES:
+Read from ./research-agents/AGENT-*.md files - these define what each Perplexity agent researches
+
+LAYER 2 PROMPT:
+Read from ./layer-2-analyst/LAYER-2-ANALYST-PROMPT.md - this defines the Claude synthesis prompt
+
+API ENDPOINTS:
+- Perplexity: https://api.perplexity.ai/chat/completions (model: sonar-pro)
+- Claude: https://api.anthropic.com/v1/messages (model: claude-opus-4-5-20251101)
+
+API KEYS: Will be inserted as "APIINSERT" placeholders (replaced during import)
+
+OUTPUT: Complete n8n workflow JSON ready to import
