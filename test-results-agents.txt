@@ -1,0 +1,40 @@
+=== Agent 1: Property Stock (806 chars) ===
+```json
+{
+  "zip_code": "63365",
+  "data_coverage": "City-level data for New Melle (city within ZIP 63365); limited housing stock details available; no zip-level specifics on age, types, or characteristics; county-level aggregate not detailed in sources[1][2][3]",
+  "housing_stock_age": null,
+  "pro
+...
+
+=== Agent 2: Financial & Equity (1307 chars) ===
+```json
+{
+  "zip_code": "63365",
+  "data_coverage": "Limited zip-level data available; primarily from December 2024 sales and home value indices. No data found on equity positions, mortgage characteristics, tax assessments, or distressed sales. County-level data not detailed in sources.",
+  "propert
+...
+
+=== Agent 3: Distress & Legal (1065 chars) ===
+```json
+{
+  "zip_code": "63365",
+  "data_coverage": "Limited; primarily statewide Missouri and general housing market data for New Melle, MO (St. Charles County). No zip-specific or county-specific distress filing volumes, trends, or raw counts available in search results. St. Charles County not lis
+...
+
+=== Agent 4: Ownership & Occupancy (743 chars) ===
+```json
+{
+  "zip_code": "63365",
+  "data_coverage": "Limited to city-level data for New Melle, MO (population ~510-538); no zip-specific ownership records, portfolio, investor, or entity data available. Housing market metrics from 2023-2025[1][2][3][4].",
+  "occupancy": {
+    "owner_occupied_rate": 
+...
+
+=== Agent 5: Market Dynamics (1604 chars) ===
+```json
+{
+  "zip_code": "63365",
+  "data_coverage": "Limited zip-specific data available; primarily from Redfin, Zillow, and NeighborhoodScout as of early 2025. Regional Missouri trends indicate rising prices and steady growth. No recent data on listings, permits, or demographics specific to 2026.",
+...
+

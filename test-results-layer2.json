@@ -1,0 +1,56 @@
+{
+  "zip_code": "63365",
+  "city": "New Melle",
+  "county": "St. Charles County",
+  "state": "Missouri",
+  "exit_strategy": "Fix & Flip",
+  "signal_classification": "LOW",
+  "confidence": 0.45,
+  "data_quality_notes": "Severe data scarcity across all reports. Zip-level granular data largely unavailable - no equity distribution, distress metrics, ownership tenure, foreclosure volumes, or property condition indicators. Market extremely thin with only 1 sale in December 2024. Most metrics are estimates or aggregates from limited sources. Rural density makes statistical reliability questionable.",
+  "dominant_profiles": [
+    "equity_rich",
+    "owner_occupied_stable"
+  ],
+  "observed_combinations": [
+    {
+      "name": "Affluent Owner-Occupied Stability",
+      "prevalence": "high",
+      "evidence": "Ownership & Occupancy Analyst reports 91.2% owner-occupied rate (higher than 98.6% of US neighborhoods). Market Dynamics notes median household income $103,750 with 89.33% white-collar workforce. Financial Analyst shows median values $407K-$650K.",
+      "signal_strength": "strong",
+      "relevance_to_strategy": "High owner-occupancy and affluent demographics indicate stable homeowners unlikely to sell distressed properties. Reduces off-market acquisition opportunities for fix & flip."
+    },
+    {
+      "name": "Thin Market / Low Liquidity",
+      "prevalence": "high",
+      "evidence": "Financial Analyst reports only 1 home sold in December 2024. Active listings range 0-15. Days on market only 19 with 104% sale-to-list ratio. Housing density 124.2 units/sq mi (rural).",
+      "signal_strength": "strong",
+      "relevance_to_strategy": "Extremely low transaction volume creates significant exit risk for flippers. Finding buyers for renovated properties may be challenging; holding costs could erode margins."
+    },
+    {
+      "name": "Premium Price Point Barrier",
+      "prevalence": "moderate",
+      "evidence": "Financial Analyst shows median sale price $650K (Dec 2024), listing prices $411K-$1.07M. Price per sqft $239-$286. Market Dynamics confirms homes among most expensive in Missouri.",
+      "signal_strength": "moderate",
+      "relevance_to_strategy": "High entry costs require substantial capital. Flip margins compress at higher price points; buyer pool narrows significantly above $500K, increasing exit risk."
+    },
+    {
+      "name": "Absence of Distress Signals",
+      "prevalence": "high",
+      "evidence": "Distress & Legal Analyst found no zip-specific foreclosure, tax distress, bankruptcy, probate, or code enforcement data. Missouri statewide foreclosure rate low (1 in 4,670 units). St. Charles County not flagged in state distress rankings.",
+      "signal_strength": "moderate",
+      "relevance_to_strategy": "No identifiable distress pipeline for below-market acquisitions. Fix & flip strategy depends on acquiring properties at discount - no evidence of such opportunities here."
+    },
+    {
+      "name": "New Construction Competition",
+      "prevalence": "moderate",
+      "evidence": "Market Dynamics Analyst notes 'new growth in residential real estate' with 'brand new construction' and housing stock 'among the newest in the nation on average.'",
+      "signal_strength": "moderate",
+      "relevance_to_strategy": "New construction competes directly with renovated flips. Buyers in this price range may prefer new builds over rehabbed older homes, limiting flip demand."
+    }
+  ],
+  "median_value": 432000,
+  "lat": 38.7123,
+  "lng": -90.8845,
+  "insight": "New Melle 63365 presents poor fix & flip conditions: an ultra-thin market (1 sale/month), 91% owner-occupied affluent households, no identifiable distress pipeline, and premium price points ($407K-$650K) that compress margins and narrow buyer pools. New construction activity further competes for limited buyers.",
+  "reasoning": "Applying mosaic theory across all five reports reveals a consistent pattern unfavorable to fix & flip: The Ownership Analyst's 91.2% owner-occupancy rate combined with Market Dynamics' $103K median income and white-collar workforce profile indicates stable, affluent homeowners with no motivation to sell distressed. The Financial Analyst's single December sale and 19-day DOM with 104% sale-to-list ratio shows a seller's market with no discount opportunities - but critically, the volume is too thin to reliably exit a flip. The Distress Analyst found zero zip-level foreclosure, tax lien, or probate data, and Missouri's low statewide foreclosure rate (1:4,670) suggests no hidden distress pipeline. The Property Stock Analyst's rural density (124 units/sq mi) confirms limited housing stock to source deals from. The combination of high entry costs ($407K-$650K median), new construction competition, and absence of any distress or absentee owner signals creates a market where acquisition at flip-viable prices is nearly impossible, and exit risk is elevated due to illiquidity. Data confidence is low (0.45) due to severe scarcity across all reports - most agents could not find zip-specific metrics, and the single-sale December data point is statistically unreliable."
+}
