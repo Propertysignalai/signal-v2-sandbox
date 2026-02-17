@@ -1,0 +1,9 @@
+# Sensitive files - do not commit
+*with-keys.json
+*-ready-import.json
+*minimal.json
+test-payload.json
+test-result.txt
+n8n-import-*.txt
+n8n-import-*.json
+*.log
